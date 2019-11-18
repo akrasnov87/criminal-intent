@@ -17,23 +17,16 @@ public class CrimeActivity extends SingleFragmentActivity {
     private static final String EXTRA_CRIME_ID =
             "com.bignerdranch.android.criminalintent.crime_id";
 
-    public static Intent newIntent(Context packageContext, UUID crimeId) {
+    public static Intent newIntent(Context packageContext, int position) {
         Intent intent = new Intent(packageContext, CrimeActivity.class);
-        intent.putExtra(EXTRA_CRIME_ID, crimeId);
+        intent.putExtra(EXTRA_CRIME_ID, position);
         return intent;
-    }
-
-    public static void setResult(Activity activity, UUID crimeId) {
-        Intent intent = new Intent(activity, CrimeActivity.class);
-        intent.putExtra(EXTRA_CRIME_ID, crimeId);
-
-        activity.setResult(activity.RESULT_OK, intent);
     }
 
     @Override
     protected Fragment createFragment() {
-        UUID crimeId = (UUID) getIntent()
-                .getSerializableExtra(EXTRA_CRIME_ID);
-        return CrimeFragment.newInstance(crimeId);
+        int position = getIntent()
+                .getIntExtra(EXTRA_CRIME_ID, 0);
+        return CrimeFragment.newInstance(position);
     }
 }
