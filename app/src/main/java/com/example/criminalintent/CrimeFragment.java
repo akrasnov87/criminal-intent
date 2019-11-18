@@ -1,5 +1,6 @@
 package com.example.criminalintent;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -11,6 +12,7 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import java.util.List;
@@ -41,6 +43,7 @@ public class CrimeFragment extends Fragment {
         UUID crimeId = (UUID) getArguments().getSerializable(ARG_CRIME_ID);
         mCrime = CrimeLab.get(getActivity()).getCrime(crimeId);
     }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {

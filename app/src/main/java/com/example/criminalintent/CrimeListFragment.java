@@ -1,5 +1,6 @@
 package com.example.criminalintent;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.format.DateFormat;
@@ -11,13 +12,17 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
+import java.util.UUID;
 
 public class CrimeListFragment extends Fragment {
+
+    private int REQUEST_CODE = 0;
 
     private RecyclerView mCrimeRecyclerView;
     private CrimeAdapter mAdapter;
@@ -31,21 +36,19 @@ public class CrimeListFragment extends Fragment {
         return view;
     }
 
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        updateUI();
-    }
-
     private void updateUI() {
         CrimeLab crimeLab = CrimeLab.get(getActivity());
         List<Crime> crimes = crimeLab.getCrimes();
-        if (mAdapter == null) {
-            mAdapter = new CrimeAdapter(crimes);
-            mCrimeRecyclerView.setAdapter(mAdapter);
-        } else {
-            mAdapter.notifyDataSetChanged();
+        mAdapter = new CrimeAdapter(crimes);
+        mCrimeRecyclerView.setAdapter(mAdapter);
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (mAdapter != null) {
+            mAdapter.notifyItemChanged(requestCode);
         }
     }
 
@@ -60,7 +63,7 @@ public class CrimeListFragment extends Fragment {
             itemView.setOnClickListener(this);
             mTitleTextView = itemView.findViewById(R.id.crime_title);
             mDateTextView = itemView.findViewById(R.id.crime_date);
-            mSolvedImageView = (ImageView) itemView.findViewById(R.id.crime_solved);
+            mSolvedImageView = itemView.findViewById(R.id.crime_solved);
         }
 
         public void bind(Crime crime) {
@@ -74,7 +77,7 @@ public class CrimeListFragment extends Fragment {
         @Override
         public void onClick(View v) {
             Intent intent = CrimeActivity.newIntent(getActivity(), mCrime.getId());
-            startActivity(intent);
+            startActivityForResult(intent, this.getAdapterPosition());
         }
     }
 

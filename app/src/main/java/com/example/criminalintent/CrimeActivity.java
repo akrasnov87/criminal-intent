@@ -1,9 +1,11 @@
 package com.example.criminalintent;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -19,6 +21,13 @@ public class CrimeActivity extends SingleFragmentActivity {
         Intent intent = new Intent(packageContext, CrimeActivity.class);
         intent.putExtra(EXTRA_CRIME_ID, crimeId);
         return intent;
+    }
+
+    public static void setResult(Activity activity, UUID crimeId) {
+        Intent intent = new Intent(activity, CrimeActivity.class);
+        intent.putExtra(EXTRA_CRIME_ID, crimeId);
+
+        activity.setResult(activity.RESULT_OK, intent);
     }
 
     @Override
