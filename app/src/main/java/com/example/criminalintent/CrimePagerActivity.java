@@ -3,6 +3,7 @@ package com.example.criminalintent;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
@@ -15,7 +16,7 @@ import java.util.UUID;
 
 import static androidx.fragment.app.FragmentStatePagerAdapter.BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT;
 
-public class CrimePagerActivity extends AppCompatActivity {
+public class CrimePagerActivity extends AppCompatActivity implements View.OnClickListener {
 
     private static final String EXTRA_CRIME_ID =
             "com.bignerdranch.android.criminalintent.crime_id";
@@ -44,7 +45,7 @@ public class CrimePagerActivity extends AppCompatActivity {
             @Override
             public Fragment getItem(int position) {
                 Crime crime = mCrimes.get(position);
-                return CrimeFragment.newInstance(crime.getId());
+                return CrimeFragment.newInstance(crime.getId(), position);
             }
             @Override
             public int getCount() {
@@ -57,6 +58,26 @@ public class CrimePagerActivity extends AppCompatActivity {
                 mViewPager.setCurrentItem(i);
                 break;
             }
+        }
+    }
+
+    @Override
+    public void onClick(View v) {
+        int index = mViewPager.getCurrentItem();
+        switch (v.getId()){
+            case R.id.crime_to_start:
+                if(index != 0) {
+                    mViewPager.setCurrentItem(0);
+                }
+                break;
+
+            case R.id.crime_to_end:
+                int last = mViewPager.getAdapter().getCount() - 1;
+                if(index != last){
+                    mViewPager.setCurrentItem(last);
+                }
+
+                break;
         }
     }
 }
