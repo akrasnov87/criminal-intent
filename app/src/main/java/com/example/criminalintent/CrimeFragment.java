@@ -1,15 +1,19 @@
 package com.example.criminalintent;
 
+import android.Manifest;
 import android.app.Activity;
+import android.content.ContentResolver;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.ContactsContract;
+import android.provider.ContactsContract.CommonDataKinds.Phone;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.text.format.DateFormat;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,8 +21,11 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.TextView;
 
+import androidx.core.app.ActivityCompat;
 import androidx.core.app.ShareCompat;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
@@ -35,6 +42,7 @@ public class CrimeFragment extends Fragment {
 
     private static final int REQUEST_DATE = 0;
     private static final int REQUEST_CONTACT = 1;
+    private static final int REQUEST_CALL_CONTACT = 2;
 
     private Crime mCrime;
     private EditText mTitleField;
@@ -42,6 +50,7 @@ public class CrimeFragment extends Fragment {
     private CheckBox mSolvedCheckBox;
     private Button mSuspectButton;
     private Button mReportButton;
+    private Button mCallButton;
 
     public static CrimeFragment newInstance(UUID crimeId) {
         Bundle args = new Bundle();
@@ -129,6 +138,16 @@ public class CrimeFragment extends Fragment {
             }
         });
 
+        final Intent pickCallContact = new Intent(Intent.ACTION_PICK,
+                ContactsContract.Contacts.CONTENT_URI);
+
+        mCallButton = v.findViewById(R.id.crime_tel);
+        mCallButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                startActivityForResult(pickCallContact, REQUEST_CALL_CONTACT);
+            }
+        });
+
         final Intent pickContact = new Intent(Intent.ACTION_PICK,
                 ContactsContract.Contacts.CONTENT_URI);
         mSuspectButton = v.findViewById(R.id.crime_suspect);
@@ -184,6 +203,55 @@ public class CrimeFragment extends Fragment {
             } finally {
                 c.close();
             }
+        }else if(REQUEST_CALL_CONTACT == requestCode && data != null){
+            Uri contactUri = data.getData();
+            String contactId = null;
+            // Определение полей, значения которых должны быть
+            // возвращены запросом.
+            String[] queryFields = new String[] {
+                    ContactsContract.Contacts._ID
+            };
+            // Выполнение запроса - contactUri здесь выполняет функции
+            // условия "where"
+            ContentResolver contentResolver = getActivity().getContentResolver();
+            Cursor c = contentResolver
+                    .query(contactUri, queryFields, null, null, null);
+            try {
+                // Проверка получения результатов
+                if (c.getCount() == 0) {
+                    return;
+                }
+                // Извлечение первого столбца данных - имени подозреваемого.
+                c.moveToFirst();
+                contactId = c.getString(0);
+            } finally {
+                c.close();
+            }
+            try {
+                Cursor phones = contentResolver.query(Phone.CONTENT_URI, null,
+                        Phone.CONTACT_ID + " = " + contactId, null, null);
+                while (phones.moveToNext()) {
+                    String number = phones.getString(phones.getColumnIndex(Phone.NUMBER));
+                    int type = phones.getInt(phones.getColumnIndex(Phone.TYPE));
+                    switch (type) {
+                        case Phone.TYPE_HOME:
+
+                            break;
+                        case Phone.TYPE_MOBILE:
+                            //onCall(number);
+                            Intent intent = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + number));
+                            startActivity(intent);
+                            break;
+
+                        case Phone.TYPE_WORK:
+
+                            break;
+                    }
+                }
+                phones.close();
+            }catch (Exception e){
+                Log.d("CALL", e.getMessage());
+            }
         }
     }
 
@@ -210,5 +278,18 @@ public class CrimeFragment extends Fragment {
         String report = getString(R.string.crime_report,
                 mCrime.getTitle(), dateString, solvedString, suspect);
         return report;
+    }
+
+    public void onCall(String number) {
+        int permissionCheck = ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.CALL_PHONE);
+
+        if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(
+                    getActivity(),
+                    new String[]{Manifest.permission.CALL_PHONE},
+                    -1);
+        } else {
+            startActivity(new Intent(Intent.ACTION_CALL).setData(Uri.parse("tel:" + number)));
+        }
     }
 }
