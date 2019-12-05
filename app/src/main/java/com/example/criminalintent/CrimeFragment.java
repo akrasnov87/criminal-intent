@@ -13,9 +13,11 @@ import android.provider.MediaStore;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.text.format.DateFormat;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
@@ -39,10 +41,12 @@ public class CrimeFragment extends Fragment {
 
     private static final String ARG_CRIME_ID = "crime_id";
     private static final String DIALOG_DATE = "DialogDate";
+    private static final String DIALOG_PHOTO = "photo";
 
     private static final int REQUEST_DATE = 0;
     private static final int REQUEST_CONTACT = 1;
-    private static final int REQUEST_PHOTO= 2;
+    private static final int REQUEST_PHOTO = 2;
+    private static final int REQUEST_BIG_PHOTO = 3;
 
     private Crime mCrime;
     private File mPhotoFile;
@@ -181,6 +185,15 @@ public class CrimeFragment extends Fragment {
             }
         });
         mPhotoView = v.findViewById(R.id.crime_photo);
+        mPhotoView.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                FragmentManager manager = getFragmentManager();
+                CrimePhotoFragment dialog = CrimePhotoFragment.newInstance(mCrime.getId());
+                dialog.setTargetFragment(CrimeFragment.this, REQUEST_BIG_PHOTO);
+                dialog.show(manager, DIALOG_PHOTO);
+            }
+        });
         updatePhotoView();
 
         return v;
@@ -259,9 +272,24 @@ public class CrimeFragment extends Fragment {
         if (mPhotoFile == null || !mPhotoFile.exists()) {
             mPhotoView.setImageDrawable(null);
         } else {
-            Bitmap bitmap = PictureUtils.getScaledBitmap(
-                    mPhotoFile.getPath(), getActivity());
-            mPhotoView.setImageBitmap(bitmap);
+            ViewTreeObserver observer = mPhotoView.getViewTreeObserver();
+            observer.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+                @Override
+                public void onGlobalLayout() {
+                    try {
+                        Log.d("IMAGE", "");
+                        // Obtain layout data from view...
+                        int w = mPhotoView.getWidth();
+                        int h = mPhotoView.getHeight();
+                        Bitmap bitmap = PictureUtils.getScaledBitmap(
+                                mPhotoFile.getPath(), w, h);
+                        mPhotoView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                        mPhotoView.setImageBitmap(bitmap);
+                    }catch (Exception e){
+                        Log.e("IMAGE", e.getMessage());
+                    }
+                }
+            });
         }
     }
 }
