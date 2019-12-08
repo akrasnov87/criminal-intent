@@ -30,6 +30,14 @@ public class CrimeListActivity extends SingleFragmentActivity
     }
 
     @Override
+    public void onCrimeRemoved(Crime crime) {
+        if (findViewById(R.id.detail_fragment_container) != null) {
+            Fragment newDetail = getSupportFragmentManager().findFragmentById(R.id.detail_fragment_container);
+            getSupportFragmentManager().beginTransaction().remove(newDetail).commit();
+        }
+    }
+
+    @Override
     public void onCrimeUpdated(Crime crime) {
         CrimeListFragment listFragment = (CrimeListFragment)
                 getSupportFragmentManager().findFragmentById(R.id.fragment_container);
